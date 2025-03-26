@@ -7,42 +7,121 @@
 </head>
 <body>
     <h1>To-Do List</h1>
-    <ul id="todo-list"></ul>
+
+    <!-- 할 일 목록을 표시할 장소 -->
+    <ul id="todo-list"></ul> 
+
+    <!-- 할 일을 추가하거나 수정하는 폼 -->
     <form id="todo-form">
-        <input type="text" id="title" placeholder="Title" required>
-        <input type="text" id="description" placeholder="Description" required>
-        <button type="submit">Add To-Do</button>
+        <!-- 숨겨진 필드로 수정할 ID를 저장 -->
+        <input type="hidden" id="todo-id"> 
+        <input type="text" id="title" placeholder="Title" required> <!-- 제목 입력 필드 -->
+        <input type="text" id="description" placeholder="Description" required> <!-- 설명 입력 필드 -->
+        <button type="submit">Add To-Do</button> <!-- 폼 제출 버튼 -->
     </form>
+
+    <div id="edit-container" style="display: none;">
+        <h2>Edit To-Do</h2>
+        <input type="text" id="edit-title" placeholder="Edit Title" required>
+        <input type="text" id="edit-description" placeholder="Edit Description" required>
+        <button onclick="saveEdit()">Save Changes</button>
+    </div>
+
     <script>
+        // 할 일 목록을 받아와서 화면에 표시하는 함수
         async function fetchTodos() {
-            const response = await fetch('/todos');
-            const todos = await response.json();
-            const todoList = document.getElementById('todo-list');
-            todoList.innerHTML = '';
+            const response = await fetch('/todos'); // API에서 할 일 목록을 가져옴
+            const todos = await response.json(); // JSON 형식으로 변환
+            const todoList = document.getElementById('todo-list'); 
+            todoList.innerHTML = ''; // 목록을 새로 고침
+
             todos.forEach(todo => {
+                // 할 일 항목을 li 태그로 만들어 목록에 추가
                 const li = document.createElement('li');
-                li.textContent = `${todo.title}: ${todo.description}`;
-                todoList.appendChild(li);
+                li.innerHTML = `
+                    <span style="text-decoration: ${todo.completed ? 'line-through' : 'none'}">
+                        <strong>${todo.title}</strong>: ${todo.description}
+                    </span>
+                    <button onclick="editTodo(${todo.id}, '${todo.title}', '${todo.description}')">Edit</button>
+                    <button onclick="deleteTodo(${todo.id})">Delete</button>
+                    <button onclick="toggleComplete(${todo.id}, ${todo.completed})">
+                        ${todo.completed ? 'Undo Complete' : 'Complete'}
+                    </button>
+                `;
+                todoList.appendChild(li); // 화면에 할 일 목록 추가
             });
         }
 
-        document.getElementById('todo-form').addEventListener('submit', async (event) => {
-            event.preventDefault();
-            const title = document.getElementById('title').value;
-            const description = document.getElementById('description').value;
-            const response = await fetch('/todos', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ id: Date.now(), title, description, completed: false })
+        // 특정 ID의 할 일을 삭제하는 함수
+        async function deleteTodo(id) {
+            const response = await fetch(`/todos/${id}`, { method: 'DELETE' }); // DELETE 요청
+            if (response.ok) fetchTodos(); // 삭제 후 목록을 새로 고침
+        }
+
+        // 완료/취소 버튼 클릭 시 상태를 변경하는 함수
+        async function toggleComplete(id, currentStatus) {
+            const response = await fetch(`/todos/${id}/complete`, {
+                method: 'PUT',
             });
-            if (response.ok) {
-                fetchTodos();
+            if (response.ok) fetchTodos(); // 상태 변경 후 목록을 새로 고침
+        }
+
+        // 할 일을 수정하기 위해 폼에 데이터를 채워주는 함수
+        function editTodo(id, title, description) {
+            document.getElementById('edit-container').style.display = 'block';
+            document.getElementById('edit-title').value = title;
+            document.getElementById('edit-description').value = description;
+            document.getElementById('todo-id').value = id;
+        }
+
+        // 수정된 할 일을 저장하는 함수
+        async function saveEdit() {
+            const id = document.getElementById('todo-id').value;
+            const title = document.getElementById('edit-title').value;
+            const description = document.getElementById('edit-description').value;
+
+            await fetch(`/todos/${id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id, title, description, completed: false })
+            });
+
+            document.getElementById('edit-container').style.display = 'none';
+            fetchTodos(); // 목록 새로 고침
+        }
+
+        // 폼 제출 시 새 할 일을 추가하거나 수정하는 함수
+        document.getElementById('todo-form').addEventListener('submit', async (event) => {
+            event.preventDefault(); // 폼이 기본적으로 제출되는 것을 막음
+            const id = document.getElementById('todo-id').value; // 수정할 ID 가져오기
+            const title = document.getElementById('title').value; // 제목 가져오기
+            const description = document.getElementById('description').value; // 설명 가져오기
+
+            if (id) {
+                // 수정 (PUT 요청)
+                await fetch(`/todos/${id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id: Number(id), title, description, completed: false })
+                });
+            } else {
+                // 새 항목 추가 (POST 요청)
+                await fetch('/todos', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id: Date.now(), title, description, completed: false })
+                });
             }
+
+            // 입력 필드 초기화
+            document.getElementById('todo-id').value = ''; 
+            document.getElementById('title').value = '';
+            document.getElementById('description').value = '';
+
+            fetchTodos(); // 할 일 목록을 새로 고침
         });
 
-        fetchTodos();
+        fetchTodos(); // 페이지 로딩 시 할 일 목록을 처음 가져옴
     </script>
 </body>
 </html>

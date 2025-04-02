@@ -4,10 +4,11 @@ from fastapi import FastAPI, HTTPException
 from fastapi.responses import HTMLResponse
 from pydantic import BaseModel, Field
 from typing import List
+from typing import Optional
 
 # To-Do 항목 데이터 모델
 class TodoItem(BaseModel):
-    id: int | None = None  # id는 자동 생성
+    id: Optional[int] = None   # id는 자동 생성
     title: str = Field(..., min_length=1)
     description: str = Field(..., min_length=1)
     completed: bool = False

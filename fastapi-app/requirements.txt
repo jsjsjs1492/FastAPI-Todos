@@ -11,3 +11,7 @@ starlette==0.46.1
 typing_extensions==4.12.2
 fastapi
 uvicorn[standard]
+pytest
+pytest-html
+httpx
+pytest-cov

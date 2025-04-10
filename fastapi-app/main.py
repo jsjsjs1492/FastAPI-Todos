@@ -3,8 +3,8 @@ import os
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import HTMLResponse
 from pydantic import BaseModel, Field
-from typing import List
-from typing import Optional
+from typing import List, Optional
+from datetime import datetime, date
 
 # To-Do 항목 데이터 모델
 class TodoItem(BaseModel):
@@ -12,6 +12,8 @@ class TodoItem(BaseModel):
     title: str = Field(..., min_length=1)
     description: str = Field(..., min_length=1)
     completed: bool = False
+    priority: str = "medium"  # 우선순위: high, medium, low
+    due_date: Optional[date] = None  # 마감일
 
 TODO_FILE = "todo.json"
 
@@ -19,14 +21,27 @@ def load_todos():
     if os.path.exists(TODO_FILE):
         try:
             with open(TODO_FILE, 'r', encoding='utf-8') as f:
-                return json.load(f)
+                todos = json.load(f)
+                # Convert string dates back to date objects
+                for todo in todos:
+                    if todo.get("due_date"):
+                        todo["due_date"] = datetime.fromisoformat(todo["due_date"]).date()
+                return todos
         except json.JSONDecodeError:
             return []
     return []
 
 def save_todos(data):
+    # Convert date objects to strings for JSON serialization
+    serializable_data = []
+    for todo in data:
+        todo_copy = dict(todo)
+        if todo_copy.get("due_date") and not isinstance(todo_copy["due_date"], str):
+            todo_copy["due_date"] = todo_copy["due_date"].isoformat()
+        serializable_data.append(todo_copy)
+    
     with open(TODO_FILE, 'w', encoding='utf-8') as f:
-        json.dump(data, f, indent=4, ensure_ascii=False)
+        json.dump(serializable_data, f, indent=4, ensure_ascii=False)
 
 
 from fastapi.middleware.cors import CORSMiddleware
@@ -84,6 +99,38 @@ def complete_todo(todo_id: int):
             return todo
     raise HTTPException(status_code=404, detail="To-Do item not found")
 
+@app.put("/todos/{todo_id}/priority")
+def update_priority(todo_id: int, priority: str):
+    if priority not in ["high", "medium", "low"]:
+        raise HTTPException(status_code=400, detail="Priority must be high, medium, or low")
+    
+    todos = load_todos()
+    for todo in todos:
+        if todo["id"] == todo_id:
+            todo["priority"] = priority
+            save_todos(todos)
+            return todo
+    raise HTTPException(status_code=404, detail="To-Do item not found")
+
+@app.put("/todos/{todo_id}/due-date")
+def update_due_date(todo_id: int, due_date: Optional[date] = None):
+    todos = load_todos()
+    for todo in todos:
+        if todo["id"] == todo_id:
+            todo["due_date"] = due_date
+            save_todos(todos)
+            return todo
+    raise HTTPException(status_code=404, detail="To-Do item not found")
+
+@app.get("/todos/overdue")
+def get_overdue_todos():
+    todos = load_todos()
+    today = date.today()
+    overdue_todos = [todo for todo in todos if todo.get("due_date") and 
+                     not todo["completed"] and 
+                     datetime.fromisoformat(todo["due_date"]).date() < today]
+    return overdue_todos
+
 @app.get("/", response_class=HTMLResponse)
 def read_root():
     try:
@@ -91,3 +138,11 @@ def read_root():
             return HTMLResponse(content=file.read())
     except FileNotFoundError:
         raise HTTPException(status_code=404, detail="HTML file not found")
+
+@app.get("/todos/{todo_id}", response_model=TodoItem)
+def get_todo_by_id(todo_id: int):
+    todos = load_todos()
+    for todo in todos:
+        if todo["id"] == todo_id:
+            return todo
+    raise HTTPException(status_code=404, detail="To-Do item not found")

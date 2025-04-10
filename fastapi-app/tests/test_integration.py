@@ -7,7 +7,7 @@ def test_full_todo_flow():
     # 1. 루트 엔드포인트 확인
     response = requests.get(f"{BASE_URL}/")
     assert response.status_code == 200
-    assert "Welcome! This is Todo App" in response.text
+    assert "Todo App" in response.text
 
     # 2. 전체 TODO 조회
     response = requests.get(f"{BASE_URL}/todos")

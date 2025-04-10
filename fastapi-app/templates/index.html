@@ -276,9 +276,6 @@
     </div>
 
     <script>
-        // API 엔드포인트
-        const API_URL = '/todos';
-        
         // DOM 요소
         const titleInput = document.getElementById('title');
         const descriptionInput = document.getElementById('description');
@@ -301,7 +298,7 @@
         // 할 일 목록 불러오기
         async function loadTodos() {
             try {
-                const response = await fetch(API_URL);
+                const response = await fetch('/todos');
                 const todos = await response.json();
                 renderTodos(todos);
             } catch (error) {
@@ -380,7 +377,7 @@
             }
             
             try {
-                const response = await fetch(API_URL, {
+                const response = await fetch('/todos', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -410,7 +407,7 @@
         // 할 일 완료/미완료 토글
         async function toggleComplete(id) {
             try {
-                const response = await fetch(`${API_URL}/${id}/complete`, {
+                const response = await fetch(`/todos/${id}/complete`, {
                     method: 'PUT'
                 });
                 
@@ -427,7 +424,7 @@
         // 할 일 수정
         async function editTodo(id) {
             try {
-                const response = await fetch(`${API_URL}/${id}`);
+                const response = await fetch(`/todos/${id}`);
                 const todo = await response.json();
                 
                 // 모달 폼에 기존 데이터 채우기
@@ -465,7 +462,7 @@
             }
             
             try {
-                const response = await fetch(`${API_URL}/${id}`, {
+                const response = await fetch(`/todos/${id}`, {
                     method: 'PUT',
                     headers: {
                         'Content-Type': 'application/json'
@@ -508,7 +505,7 @@
             }
             
             try {
-                const response = await fetch(`${API_URL}/${id}`, {
+                const response = await fetch(`/todos/${id}`, {
                     method: 'DELETE'
                 });
                 

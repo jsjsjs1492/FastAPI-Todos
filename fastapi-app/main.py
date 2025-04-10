@@ -4,8 +4,29 @@ from typing import List, Optional
 import json
 import os
 from datetime import date, datetime
+from fastapi.staticfiles import StaticFiles
+from fastapi.templating import Jinja2Templates
+from fastapi.responses import HTMLResponse
+from fastapi import Request
+import pathlib
 
 app = FastAPI()
+
+# Set up templates and static files
+templates = Jinja2Templates(directory="templates")
+
+# Create static directory if it doesn't exist
+static_dir = pathlib.Path("static")
+static_dir.mkdir(exist_ok=True)
+
+# Mount static files only after ensuring directory exists
+app.mount("/static", StaticFiles(directory="static"), name="static")
+
+# Add this after your app definition and before other routes
+
+@app.get("/", response_class=HTMLResponse)
+async def get_index(request: Request):
+    return templates.TemplateResponse("index.html", {"request": request})
 
 # Data model
 class TodoItem(BaseModel):

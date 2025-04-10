@@ -1,0 +1,4 @@
+/* Basic styles for the Todo app */
+.todo-item {
+    transition: all 0.3s ease;
+}

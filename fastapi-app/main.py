@@ -1,5 +1,5 @@
-from fastapi import FastAPI, HTTPException, Query
-from pydantic import BaseModel, Field
+from fastapi import FastAPI, HTTPException, Query, Body
+from pydantic import BaseModel, Field, validator
 from typing import List, Optional
 import json
 import os
@@ -15,6 +15,13 @@ class TodoItem(BaseModel):
     completed: bool = False
     priority: str = "medium"  # high, medium, low
     due_date: Optional[date] = None
+    
+    # Add validator for priority
+    @validator('priority')
+    def validate_priority(cls, v):
+        if v not in ["high", "medium", "low"]:
+            raise ValueError('Priority must be one of: high, medium, low')
+        return v
 
 # File path for storing todos
 TODOS_FILE = "todos.json"
@@ -45,6 +52,25 @@ def save_todos(todos):
 @app.get("/todos", response_model=List[TodoItem])
 def get_todos():
     return load_todos()
+
+# Move the overdue endpoint before the get_todo_by_id endpoint to avoid routing conflicts
+@app.get("/todos/overdue", response_model=List[TodoItem])
+def get_overdue_todos():
+    todos = load_todos()
+    today = date.today()
+    
+    overdue_todos = []
+    for todo in todos:
+        if (todo.get("due_date") and 
+            not todo.get("completed")):
+            # Handle string date format
+            due_date = todo["due_date"]
+            if isinstance(due_date, str):
+                due_date = datetime.fromisoformat(due_date).date()
+            if due_date < today:
+                overdue_todos.append(todo)
+    
+    return overdue_todos
 
 @app.get("/todos/{todo_id}", response_model=TodoItem)
 def get_todo_by_id(todo_id: int):
@@ -111,22 +137,8 @@ def toggle_complete(todo_id: int):
     
     raise HTTPException(status_code=404, detail="To-Do item not found")
 
-@app.get("/todos/overdue", response_model=List[TodoItem])
-def get_overdue_todos():
-    todos = load_todos()
-    today = date.today()
-    
-    overdue_todos = []
-    for todo in todos:
-        if (todo.get("due_date") and 
-            not todo.get("completed") and 
-            datetime.fromisoformat(todo["due_date"]).date() < today):
-            overdue_todos.append(todo)
-    
-    return overdue_todos
-
 @app.put("/todos/{todo_id}/priority", response_model=TodoItem)
-def update_priority(todo_id: int, priority: str):
+def update_priority(todo_id: int, priority: str = Body(...)):
     if priority not in ["high", "medium", "low"]:
         raise HTTPException(status_code=400, detail="Invalid priority value")
     
@@ -141,12 +153,21 @@ def update_priority(todo_id: int, priority: str):
     raise HTTPException(status_code=404, detail="To-Do item not found")
 
 @app.put("/todos/{todo_id}/due-date", response_model=TodoItem)
-def update_due_date(todo_id: int, due_date: Optional[date] = None):
+def update_due_date(todo_id: int, due_date: Optional[str] = Body(None)):
     todos = load_todos()
     
     for i, todo in enumerate(todos):
         if todo["id"] == todo_id:
-            todo["due_date"] = due_date.isoformat() if due_date else None
+            if due_date:
+                # Convert string to date object for validation, then back to string for storage
+                try:
+                    parsed_date = date.fromisoformat(due_date)
+                    todo["due_date"] = due_date
+                except ValueError:
+                    raise HTTPException(status_code=400, detail="Invalid date format. Use YYYY-MM-DD")
+            else:
+                todo["due_date"] = None
+                
             save_todos(todos)
             return todo
     

@@ -34,14 +34,14 @@ class TodoItem(BaseModel):
     title: str = Field(..., min_length=1)
     description: str = Field(..., min_length=1)
     completed: bool = False
-    priority: str = "medium"  # high, medium, low
+    priority: str = "medium"
     due_date: Optional[date] = None
+    category: str = "general"  # 카테고리 필드 추가
     
-    # Add validator for priority
     @validator('priority')
     def validate_priority(cls, v):
-        if v not in ["high", "medium", "low"]:
-            raise ValueError('Priority must be one of: high, medium, low')
+        if v not in ["low", "medium", "high"]:
+            raise ValueError('Priority must be low, medium, or high')
         return v
 
 # File path for storing todos
@@ -98,12 +98,14 @@ def get_categories():
 
 # 카테고리 업데이트 엔드포인트 추가
 @app.put("/todos/{todo_id}/category", response_model=TodoItem)
-def update_category(todo_id: int, category: str = Body(...)):
+def update_category(todo_id: int, data: dict):
+    category = data.get("category")
     todos = load_todos()
     
     for i, todo in enumerate(todos):
         if todo["id"] == todo_id:
-            todo["category"] = category
+            # 빈 카테고리는 general로 설정
+            todo["category"] = category if category else "general"
             save_todos(todos)
             return todo
     
@@ -194,10 +196,11 @@ def toggle_complete(todo_id: int):
     raise HTTPException(status_code=404, detail="To-Do item not found")
 
 @app.put("/todos/{todo_id}/priority", response_model=TodoItem)
-def update_priority(todo_id: int, priority: str = Body(...)):
-    if priority not in ["high", "medium", "low"]:
-        raise HTTPException(status_code=400, detail="Invalid priority value")
-    
+def update_priority(todo_id: int, data: dict):
+    priority = data.get("priority")
+    if not priority or priority not in ["low", "medium", "high"]:
+        raise HTTPException(status_code=400, detail="Priority must be low, medium, or high")
+        
     todos = load_todos()
     
     for i, todo in enumerate(todos):

@@ -71,8 +71,43 @@ def save_todos(todos):
 
 # API endpoints
 @app.get("/todos", response_model=List[TodoItem])
-def get_todos():
-    return load_todos()
+def get_todos(category: Optional[str] = Query(None)):
+    todos = load_todos()
+    
+    # 카테고리 필터링
+    if category:
+        todos = [todo for todo in todos if todo.get("category") == category]
+    
+    return todos
+
+# 카테고리 목록 가져오기 엔드포인트 추가
+@app.get("/categories")
+def get_categories():
+    todos = load_todos()
+    categories = set()
+    
+    for todo in todos:
+        if "category" in todo and todo["category"]:
+            categories.add(todo["category"])
+    
+    # 기본 카테고리가 없으면 추가
+    if not categories:
+        categories.add("general")
+    
+    return {"categories": list(categories)}
+
+# 카테고리 업데이트 엔드포인트 추가
+@app.put("/todos/{todo_id}/category", response_model=TodoItem)
+def update_category(todo_id: int, category: str = Body(...)):
+    todos = load_todos()
+    
+    for i, todo in enumerate(todos):
+        if todo["id"] == todo_id:
+            todo["category"] = category
+            save_todos(todos)
+            return todo
+    
+    raise HTTPException(status_code=404, detail="To-Do item not found")
 
 # Move the overdue endpoint before the get_todo_by_id endpoint to avoid routing conflicts
 @app.get("/todos/overdue", response_model=List[TodoItem])

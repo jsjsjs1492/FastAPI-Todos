@@ -11,7 +11,7 @@ from fastapi import Request
 import pathlib
 
 app = FastAPI()
-
+item_error = "To-Do item not found"
 # Set up templates and static files
 templates = Jinja2Templates(directory="templates")
 
@@ -109,7 +109,7 @@ def update_category(todo_id: int, data: dict):
             save_todos(todos)
             return todo
     
-    raise HTTPException(status_code=404, detail="To-Do item not found")
+    raise HTTPException(status_code=404, detail=item_error)
 
 # Move the overdue endpoint before the get_todo_by_id endpoint to avoid routing conflicts
 @app.get("/todos/overdue", response_model=List[TodoItem])
@@ -136,7 +136,7 @@ def get_todo_by_id(todo_id: int):
     for todo in todos:
         if todo["id"] == todo_id:
             return todo
-    raise HTTPException(status_code=404, detail="To-Do item not found")
+    raise HTTPException(status_code=404, detail=item_error)
 
 @app.post("/todos", response_model=TodoItem)
 def create_todo(todo: TodoItem):
@@ -167,7 +167,7 @@ def update_todo(todo_id: int, updated_todo: TodoItem):
             save_todos(todos)
             return updated_dict
     
-    raise HTTPException(status_code=404, detail="To-Do item not found")
+    raise HTTPException(status_code=404, detail=item_error)
 
 @app.delete("/todos/{todo_id}")
 def delete_todo(todo_id: int):
@@ -180,7 +180,7 @@ def delete_todo(todo_id: int):
             return {"message": "To-Do item deleted"}
     
     # Changed to 404 to match test expectations
-    raise HTTPException(status_code=404, detail="To-Do item not found")
+    raise HTTPException(status_code=404, detail=item_error)
 
 @app.put("/todos/{todo_id}/complete", response_model=TodoItem)
 def toggle_complete(todo_id: int):
@@ -193,7 +193,7 @@ def toggle_complete(todo_id: int):
             save_todos(todos)
             return todo
     
-    raise HTTPException(status_code=404, detail="To-Do item not found")
+    raise HTTPException(status_code=404, detail=item_error)
 
 @app.put("/todos/{todo_id}/priority", response_model=TodoItem)
 def update_priority(todo_id: int, data: dict):
@@ -209,7 +209,7 @@ def update_priority(todo_id: int, data: dict):
             save_todos(todos)
             return todo
     
-    raise HTTPException(status_code=404, detail="To-Do item not found")
+    raise HTTPException(status_code=404, detail=item_error)
 
 @app.put("/todos/{todo_id}/due-date", response_model=TodoItem)
 def update_due_date(todo_id: int, due_date: Optional[str] = Body(None)):
@@ -220,7 +220,7 @@ def update_due_date(todo_id: int, due_date: Optional[str] = Body(None)):
             if due_date:
                 # Convert string to date object for validation, then back to string for storage
                 try:
-                    parsed_date = date.fromisoformat(due_date)
+                    
                     todo["due_date"] = due_date
                 except ValueError:
                     raise HTTPException(status_code=400, detail="Invalid date format. Use YYYY-MM-DD")
@@ -230,4 +230,4 @@ def update_due_date(todo_id: int, due_date: Optional[str] = Body(None)):
             save_todos(todos)
             return todo
     
-    raise HTTPException(status_code=404, detail="To-Do item not found")
+    raise HTTPException(status_code=404, detail=item_error)

@@ -16,3 +16,5 @@ pytest-html
 httpx
 pytest-cov
 requests==2.31.0
+prometheus-fastapi-instrumentator
+prometheus-client

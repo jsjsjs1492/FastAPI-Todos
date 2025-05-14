@@ -50,12 +50,22 @@ class TodoItem(BaseModel):
         return v
 
 # File path for storing todos
-TODOS_FILE = "todos.json"
+# 절대 경로 사용으로 변경
+BASE_DIR = pathlib.Path(__file__).parent
+TODOS_FILE = BASE_DIR / "todos.json"
 
 # Helper functions for data persistence
 def load_todos():
     if not os.path.exists(TODOS_FILE):
-        return []
+        # 파일이 없으면 빈 파일 생성 시도
+        try:
+            with open(TODOS_FILE, "w") as f:
+                f.write("[]")
+            return []
+        except Exception as e:
+            print(f"Error creating todos file: {e}")
+            return []
+    
     with open(TODOS_FILE, "r") as f:
         try:
             return json.load(f)
@@ -63,16 +73,21 @@ def load_todos():
             return []
 
 def save_todos(todos):
-    with open(TODOS_FILE, "w") as f:
-        # Convert date objects to strings for JSON serialization
-        serializable_todos = []
-        for todo in todos:
-            todo_copy = dict(todo)
-            if "due_date" in todo_copy and todo_copy["due_date"] is not None:
-                if isinstance(todo_copy["due_date"], date):
-                    todo_copy["due_date"] = todo_copy["due_date"].isoformat()
-            serializable_todos.append(todo_copy)
-        json.dump(serializable_todos, f)
+    try:
+        with open(TODOS_FILE, "w") as f:
+            # Convert date objects to strings for JSON serialization
+            serializable_todos = []
+            for todo in todos:
+                todo_copy = dict(todo)
+                if "due_date" in todo_copy and todo_copy["due_date"] is not None:
+                    if isinstance(todo_copy["due_date"], date):
+                        todo_copy["due_date"] = todo_copy["due_date"].isoformat()
+                serializable_todos.append(todo_copy)
+            json.dump(serializable_todos, f)
+    except Exception as e:
+        # 오류 로깅 추가
+        print(f"Error saving todos: {e}")
+        raise HTTPException(status_code=500, detail=f"Could not save todo: {str(e)}")
 
 # API endpoints
 @app.get("/todos", response_model=List[TodoItem])

@@ -30,3 +30,19 @@ ENV/
 # Database
 *.db
 *.sqlite3
+
+# 정적 파일은 제외하지 않도록 명시적으로 포함
+!static/
+!static/*.css
+!static/*.js
+!templates/
+!templates/*.html
+
+# Docker 관련 파일
+.dockerignore
+
+# 캐시 파일
+.pytest_cache/
+.coverage
+htmlcov/
+coverage.xml

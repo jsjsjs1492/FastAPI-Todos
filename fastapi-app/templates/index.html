@@ -9,7 +9,36 @@
 </head>
 <body>
     <div class="container">
-        <h1>할 일 목록</h1>
+        <h1>Todo List</h1>
+        
+        <!-- 달력 컨테이너 추가 -->
+        <div id="calendar-container">
+            <div class="calendar-header">
+                <div class="calendar-nav">
+                    <button id="prev-month">&lt;</button>
+                </div>
+                <h2 id="month-year"></h2>
+                <div class="calendar-nav">
+                    <button id="next-month">&gt;</button>
+                </div>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th class="weekend">일</th>
+                        <th>월</th>
+                        <th>화</th>
+                        <th>수</th>
+                        <th>목</th>
+                        <th>금</th>
+                        <th class="weekend">토</th>
+                    </tr>
+                </thead>
+                <tbody id="calendar-days">
+                    <!-- 날짜는 JavaScript로 생성됩니다 -->
+                </tbody>
+            </table>
+        </div>
         
         <div class="todo-form">
             <div class="form-group">
@@ -348,6 +377,118 @@
         
         // 초기 할 일 목록 로드
         loadTodos();
+        
+        // 달력 기능 구현
+        const calendarContainer = document.getElementById('calendar-container');
+        const monthYearDisplay = document.getElementById('month-year');
+        const calendarDays = document.getElementById('calendar-days');
+        const prevMonthBtn = document.getElementById('prev-month');
+        const nextMonthBtn = document.getElementById('next-month');
+
+        const today = new Date();
+        let currentMonth = today.getMonth();
+        let currentYear = today.getFullYear();
+        let selectedDate = today;
+
+        const monthNames = ["1월", "2월", "3월", "4월", "5월", "6월", "7월", "8월", "9월", "10월", "11월", "12월"];
+
+        function renderCalendar(month, year) {
+            if (!monthYearDisplay || !calendarDays) return;
+
+            calendarDays.innerHTML = '';
+            monthYearDisplay.textContent = `${year}년 ${monthNames[month]}`;
+
+            const firstDayOfMonth = new Date(year, month, 1).getDay();
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+            let date = 1;
+            for (let i = 0; i < 6; i++) {
+                const row = document.createElement('tr');
+
+                for (let j = 0; j < 7; j++) {
+                    const cell = document.createElement('td');
+                    
+                    // 주말 클래스 추가
+                    if (j === 0 || j === 6) {
+                        cell.classList.add('weekend');
+                    }
+                    
+                    if (i === 0 && j < firstDayOfMonth) {
+                        // 달의 첫 날짜 이전의 빈 칸
+                        cell.textContent = '';
+                    } else if (date > daysInMonth) {
+                        // 달의 마지막 날짜 이후의 빈 칸
+                        cell.textContent = '';
+                    } else {
+                        cell.textContent = date;
+                        
+                        // 날짜 클릭 이벤트 추가
+                        cell.addEventListener('click', function() {
+                            const clickedDate = new Date(year, month, parseInt(this.textContent));
+                            selectDate(clickedDate);
+                        });
+                        
+                        // 오늘 날짜인지 확인
+                        if (date === today.getDate() && year === today.getFullYear() && month === today.getMonth()) {
+                            cell.classList.add('today');
+                        }
+                        
+                        // 선택된 날짜인지 확인
+                        const cellDate = new Date(year, month, date);
+                        if (selectedDate && 
+                            cellDate.getDate() === selectedDate.getDate() && 
+                            cellDate.getMonth() === selectedDate.getMonth() && 
+                            cellDate.getFullYear() === selectedDate.getFullYear()) {
+                            cell.classList.add('selected');
+                        }
+                        
+                        date++;
+                    }
+                    row.appendChild(cell);
+                }
+                calendarDays.appendChild(row);
+
+                // 모든 날짜가 표시되었으면 루프 중단
+                if (date > daysInMonth) {
+                    break;
+                }
+            }
+        }
+
+        function selectDate(date) {
+            selectedDate = date;
+            renderCalendar(currentMonth, currentYear);
+            
+            // 선택한 날짜에 대한 작업 (예: 해당 날짜의 할 일 필터링)
+            console.log(`선택된 날짜: ${date.toLocaleDateString('ko-KR')}`);
+        }
+
+        // 이전 달 버튼 클릭 이벤트
+        if (prevMonthBtn) {
+            prevMonthBtn.addEventListener('click', function() {
+                currentMonth--;
+                if (currentMonth < 0) {
+                    currentMonth = 11;
+                    currentYear--;
+                }
+                renderCalendar(currentMonth, currentYear);
+            });
+        }
+
+        // 다음 달 버튼 클릭 이벤트
+        if (nextMonthBtn) {
+            nextMonthBtn.addEventListener('click', function() {
+                currentMonth++;
+                if (currentMonth > 11) {
+                    currentMonth = 0;
+                    currentYear++;
+                }
+                renderCalendar(currentMonth, currentYear);
+            });
+        }
+
+        // 초기 달력 렌더링
+        renderCalendar(currentMonth, currentYear);
     </script>
 </body>
 </html>

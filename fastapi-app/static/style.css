@@ -253,3 +253,106 @@ input:focus, textarea:focus, select:focus {
     gap: 10px;
     margin-top: 20px;
 }
+
+/* 달력 스타일 시작 */
+#calendar-container {
+    width: 380px;
+    margin: 30px auto;
+    background-color: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    padding: 20px;
+    border-top: 5px solid #4299e1;
+    margin-bottom: 20px;
+}
+
+.calendar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.calendar-header h2 {
+    margin: 0;
+    font-size: 1.4em;
+    color: #1a365d;
+    font-weight: 600;
+}
+
+.calendar-nav {
+    display: flex;
+    gap: 10px;
+}
+
+.calendar-nav button {
+    background-color: #ebf4ff;
+    color: #4299e1;
+    border: none;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    font-size: 18px;
+    transition: all 0.2s;
+    padding: 0;
+}
+
+.calendar-nav button:hover {
+    background-color: #4299e1;
+    color: white;
+    transform: translateY(0);
+    box-shadow: none;
+}
+
+#calendar-container table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: center;
+}
+
+#calendar-container th,
+#calendar-container td {
+    padding: 10px;
+    height: 40px;
+    font-size: 0.9em;
+    color: #4a5568;
+}
+
+#calendar-container th {
+    font-weight: 600;
+    color: #2d3748;
+}
+
+#calendar-container td {
+    border-radius: 50%;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+#calendar-container td:hover:not(:empty) {
+    background-color: #ebf4ff;
+}
+
+#calendar-container td.today {
+    background-color: #4299e1;
+    color: white;
+    font-weight: bold;
+}
+
+#calendar-container td.selected {
+    background-color: #ebf4ff;
+    border: 2px solid #4299e1;
+}
+
+#calendar-container td:empty {
+    cursor: default;
+}
+
+#calendar-container .weekend {
+    color: #e53e3e;
+}
+/* 달력 스타일 끝 */

@@ -46,3 +46,5 @@ ENV/
 .coverage
 htmlcov/
 coverage.xml
+
+Jenkinsfile

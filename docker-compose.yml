@@ -16,21 +16,15 @@ services:
       context: ./jmeter
       dockerfile: Dockerfile
     container_name: jmeter
+    user: "0:0"
     volumes:
       - ./jmeter:/jmeter
-    command:
-      - jmeter
-      - -n
-      - -t
-      - /jmeter/fastapi_test_plan.jmx
-      - -l
-      - -f
-      - /jmeter/results.jtl
-      - -JBASE_URL=http://fastapi-app:5001
-      - -Jjmeter.save.saveservice.output_format=csv
-      - -e
-      - -o
-      - /jmeter/report
+    command: >
+      jmeter -n -t /jmeter/fastapi_test_plan.jmx
+      -l /jmeter/results.jtl
+      -JBASE_URL=http://fastapi-app:5001
+      -Jjmeter.save.saveservice.output_format=csv
+      -e -f -o /jmeter/report
     networks:
       - loadtest-net
 

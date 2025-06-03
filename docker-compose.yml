@@ -1,6 +1,17 @@
 version: "3.7"
 
 services:
+  promtail:
+    image: grafana/promtail:latest
+    container_name: promtail
+    volumes:
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - /etc/machine-id:/etc/machine-id:ro
+      - ./promtail-config.yaml:/etc/promtail/promtail.yaml
+    command: -config.file=/etc/promtail/promtail.yaml
+    networks:
+      - loadtest-net
+      
   fastapi-app:
     build:
       context: ./fastapi-app

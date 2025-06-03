@@ -1,17 +1,6 @@
 version: "3.7"
 
 services:
-  promtail:
-    image: grafana/promtail:latest
-    container_name: promtail
-    volumes:
-      - /var/lib/docker/containers:/var/lib/docker/containers:ro
-      - /etc/machine-id:/etc/machine-id:ro
-      - ./promtail-config.yaml:/etc/promtail/promtail.yaml
-    command: -config.file=/etc/promtail/promtail.yaml
-    networks:
-      - loadtest-net
-
   fastapi-app:
     build:
       context: ./fastapi-app
@@ -19,36 +8,30 @@ services:
     container_name: fastapi-app
     ports:
       - "5001:5001"
-    networks:
-      - loadtest-net
     depends_on:
       - loki
-    
-
-  loki:
-    image: grafana/loki:latest
-    container_name: loki
-    ports:
-      - "3100:3100"  
-    networks:
-      - loadtest-net
+    environment:
+      - LOKI_ENDPOINT=http://loki:3100/loki/api/v1/push
 
   jmeter:
     build:
       context: ./jmeter
       dockerfile: Dockerfile
     container_name: jmeter
-    user: "0:0"
     volumes:
       - ./jmeter:/jmeter
-    command: >
-      jmeter -n -t /jmeter/fastapi_test_plan.jmx
-      -l /jmeter/results.jtl
-      -JBASE_URL=http://fastapi-app:5001
-      -Jjmeter.save.saveservice.output_format=csv
-      -e -f -o /jmeter/report
-    networks:
-      - loadtest-net
+    command:
+      - jmeter
+      - -n
+      - -t
+      - /jmeter/fastapi_test_plan.jmx
+      - -l
+      - /jmeter/results.jtl
+      - -JBASE_URL=http://fastapi-app:5001
+      - -Jjmeter.save.saveservice.output_format=csv
+      - -e
+      - -o
+      - /jmeter/report
 
   sonarqube:
     image: sonarqube:latest
@@ -62,8 +45,6 @@ services:
       - sonarqube_data:/opt/sonarqube/data
       - sonarqube_logs:/opt/sonarqube/logs
       - sonarqube_extensions:/opt/sonarqube/extensions
-    networks:
-      - loadtest-net
 
   prometheus:
     image: prom/prometheus:latest
@@ -72,8 +53,6 @@ services:
       - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
     ports:
       - "7070:9090"
-    networks:
-      - loadtest-net
 
   grafana:
     image: grafana/grafana:latest
@@ -84,20 +63,18 @@ services:
       - GF_SECURITY_ADMIN_PASSWORD=admin
     volumes:
       - grafana-data:/var/lib/grafana
-    networks:
-      - loadtest-net
 
   node-exporter:
     image: prom/node-exporter:latest
     container_name: node-exporter
     ports:
       - "7100:9100"
-    networks:
-      - loadtest-net
 
-networks:
-  loadtest-net:
-    driver: bridge
+  loki:
+    image: grafana/loki:latest
+    container_name: loki
+    ports:
+      - "3100:3100"  
 
 volumes:
   sonarqube_conf:

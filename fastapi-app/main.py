@@ -51,7 +51,7 @@ async def log_requests(request: Request, call_next):
 
     return response
 
-
+app.middleware("http")(log_requests)
 
 item_error = "To-Do item not found"
 # Set up templates and static files

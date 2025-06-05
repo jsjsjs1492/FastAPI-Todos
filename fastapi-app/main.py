@@ -288,3 +288,49 @@ def update_due_date(todo_id: int, due_date: Optional[str] = Body(None)):
             return todo
     
     raise HTTPException(status_code=404, detail=item_error)
+
+# 로깅 설정 부분 수정
+# 로깅 에러는 Loki URL이 None으로 설정되어 있어 발생하는 문제입니다.
+# 다음과 같이 수정하거나 Loki 로깅을 비활성화합니다.
+
+# 방법 1: Loki 로깅 비활성화
+import logging
+import logging.config
+
+# 기본 로깅 설정
+logging.config.dictConfig({
+    'version': 1,
+    'formatters': {
+        'default': {
+            'format': '%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+        }
+    },
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+            'formatter': 'default',
+            'level': 'INFO',
+        }
+    },
+    'loggers': {
+        '': {
+            'handlers': ['console'],
+            'level': 'INFO',
+        }
+    }
+})
+
+custom_logger = logging.getLogger("fastapi_app")
+
+# 또는 방법 2: Loki URL 올바르게 설정 (Loki 서버가 있는 경우)
+# from logging_loki import LokiHandler
+# 
+# loki_handler = LokiHandler(
+#     url="http://loki:3100/loki/api/v1/push",  # 올바른 Loki URL 설정
+#     tags={"application": "fastapi-app"},
+#     version="1",
+# )
+# 
+# custom_logger = logging.getLogger("fastapi_app")
+# custom_logger.addHandler(loki_handler)
+# custom_logger.setLevel(logging.INFO)

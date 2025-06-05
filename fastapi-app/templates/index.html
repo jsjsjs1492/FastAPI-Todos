@@ -11,68 +11,108 @@
     <div class="container">
         <h1>Todo List</h1>
         
-        <!-- 달력 컨테이너 추가 -->
-        <div id="calendar-container">
-            <div class="calendar-header">
-                <div class="calendar-nav">
-                    <button id="prev-month">&lt;</button>
-                </div>
-                <h2 id="month-year"></h2>
-                <div class="calendar-nav">
-                    <button id="next-month">&gt;</button>
+        <!-- 좌우 분할 레이아웃 추가 -->
+        <div class="split-layout">
+            <!-- 왼쪽: 할 일 추가 폼 -->
+            <div class="left-panel">
+                <div class="todo-form">
+                    <h2>할 일 추가</h2>
+                    <div class="form-group">
+                        <label for="title">제목</label>
+                        <input type="text" id="title" placeholder="Title">
+                    </div>
+                    <div class="form-group">
+                        <label for="description">설명</label>
+                        <textarea id="description" placeholder="Description"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="priority">우선순위</label>
+                        <select id="priority">
+                            <option value="high">높음</option>
+                            <option value="medium" selected>중간</option>
+                            <option value="low">낮음</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="category">카테고리</label>
+                        <input type="text" id="category" placeholder="Category" value="general">
+                    </div>
+                    <div class="form-group">
+                        <label for="due-date">마감일</label>
+                        <input type="date" id="due-date">
+                    </div>
+                    <button id="add-todo">추가</button>
                 </div>
             </div>
-            <table>
-                <thead>
-                    <tr>
-                        <th class="weekend">일</th>
-                        <th>월</th>
-                        <th>화</th>
-                        <th>수</th>
-                        <th>목</th>
-                        <th>금</th>
-                        <th class="weekend">토</th>
-                    </tr>
-                </thead>
-                <tbody id="calendar-days">
-                    <!-- 날짜는 JavaScript로 생성됩니다 -->
-                </tbody>
-            </table>
+            
+            <!-- 오른쪽: 달력 -->
+            <div class="right-panel">
+                <!-- 달력 컨테이너 -->
+                <div id="calendar-container">
+                    <div class="calendar-header">
+                        <div class="calendar-nav">
+                            <button id="prev-month">&lt;</button>
+                        </div>
+                        <h2 id="month-year"></h2>
+                        <div class="calendar-nav">
+                            <button id="next-month">&gt;</button>
+                        </div>
+                    </div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th class="weekend">일</th>
+                                <th>월</th>
+                                <th>화</th>
+                                <th>수</th>
+                                <th>목</th>
+                                <th>금</th>
+                                <th class="weekend">토</th>
+                            </tr>
+                        </thead>
+                        <tbody id="calendar-days">
+                            <!-- 날짜는 JavaScript로 생성됩니다 -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
         
-        <div class="todo-form">
-            <div class="form-group">
-                <label for="title">제목</label>
-                <input type="text" id="title" placeholder="Title">
-            </div>
-            <div class="form-group">
-                <label for="description">설명</label>
-                <textarea id="description" placeholder="Description"></textarea>
-            </div>
-            <div class="form-group">
-                <label for="priority">우선순위</label>
-                <select id="priority">
-                    <option value="high">높음</option>
-                    <option value="medium" selected>중간</option>
-                    <option value="low">낮음</option>
+        <!-- 필터 및 검색 컨테이너 -->
+        <div class="filter-search-container">
+            <!-- 카테고리 필터 -->
+            <div class="filter-container">
+                <label for="category-filter">카테고리 필터:</label>
+                <select id="category-filter">
+                    <option value="all">모든 카테고리</option>
+                    <!-- 카테고리 옵션은 JavaScript로 동적 생성됩니다 -->
                 </select>
             </div>
-            <div class="form-group">
-                <label for="category">카테고리</label>
-                <input type="text" id="category" placeholder="Category" value="general">
+            
+            <!-- 검색 기능 -->
+            <div class="search-container">
+                <input type="text" id="search-input" placeholder="할 일 검색...">
+                <button id="search-button"><i class="fas fa-search"></i></button>
             </div>
-            <div class="form-group">
-                <label for="due-date">마감일</label>
-                <input type="date" id="due-date">
+            
+            <!-- 정렬 옵션 -->
+            <div class="sort-container">
+                <label for="sort-option">정렬:</label>
+                <select id="sort-option">
+                    <option value="default">기본</option>
+                    <option value="priority-high">우선순위 높은순</option>
+                    <option value="priority-low">우선순위 낮은순</option>
+                    <option value="due-date">마감일순</option>
+                </select>
             </div>
-            <button id="add-todo">추가</button>
         </div>
         
+        <!-- 할 일 목록 -->
         <div id="todo-list">
             <!-- Todo 항목들이 여기에 동적으로 추가됩니다 -->
         </div>
         
-        <!-- 수정 모달 추가 -->
+        <!-- 수정 모달 -->
         <div id="edit-modal" class="modal">
             <div class="modal-content">
                 <div class="modal-header">
@@ -123,9 +163,13 @@
         const categoryInput = document.getElementById('category');
         const addButton = document.getElementById('add-todo');
         const todoList = document.getElementById('todo-list');
-        
-        // 모달 관련 DOM 요소
+        const categoryFilter = document.getElementById('category-filter');
+        const sortOption = document.getElementById('sort-option');
+        const searchInput = document.getElementById('search-input');
+        const searchButton = document.getElementById('search-button');
         const editModal = document.getElementById('edit-modal');
+        const closeModalButton = document.getElementById('close-modal');
+        const cancelEditButton = document.getElementById('cancel-edit');
         const editForm = document.getElementById('edit-form');
         const editIdInput = document.getElementById('edit-id');
         const editTitleInput = document.getElementById('edit-title');
@@ -133,15 +177,118 @@
         const editPrioritySelect = document.getElementById('edit-priority');
         const editDueDateInput = document.getElementById('edit-due-date');
         const editCategoryInput = document.getElementById('edit-category');
-        const closeModalButton = document.getElementById('close-modal');
-        const cancelEditButton = document.getElementById('cancel-edit');
+        
+        // 모든 할 일 항목을 저장할 변수
+        let allTodos = [];
+        
+        // 정렬 옵션 변경 이벤트
+        sortOption.addEventListener('change', function() {
+            sortTodos(this.value);
+        });
+        
+        // 할 일 정렬 함수
+        function sortTodos(option) {
+            let sortedTodos = [...allTodos];
+            
+            switch(option) {
+                case 'priority-high':
+                    sortedTodos.sort((a, b) => {
+                        const priorityOrder = { 'high': 0, 'medium': 1, 'low': 2 };
+                        return priorityOrder[a.priority] - priorityOrder[b.priority];
+                    });
+                    break;
+                case 'priority-low':
+                    sortedTodos.sort((a, b) => {
+                        const priorityOrder = { 'high': 0, 'medium': 1, 'low': 2 };
+                        return priorityOrder[b.priority] - priorityOrder[a.priority];
+                    });
+                    break;
+                case 'due-date':
+                    sortedTodos.sort((a, b) => {
+                        if (!a.due_date) return 1;
+                        if (!b.due_date) return -1;
+                        return new Date(a.due_date) - new Date(b.due_date);
+                    });
+                    break;
+                default:
+                    // 기본 정렬 (ID 순)
+                    sortedTodos.sort((a, b) => a.id - b.id);
+            }
+            
+            renderTodos(sortedTodos);
+        }
+        
+        // 카테고리 필터 변경 이벤트 리스너
+        categoryFilter.addEventListener('change', function() {
+            filterTodosByCategory(this.value);
+        });
+        
+        // 카테고리별 할 일 필터링
+        function filterTodosByCategory(category) {
+            if (category === 'all') {
+                renderTodos(allTodos);
+            } else {
+                const filteredTodos = allTodos.filter(todo => 
+                    (todo.category || 'general') === category
+                );
+                renderTodos(filteredTodos);
+            }
+        }
+        
+        // 검색 기능 이벤트 리스너
+        searchButton.addEventListener('click', function() {
+            searchTodos();
+        });
+        
+        searchInput.addEventListener('keyup', function(event) {
+            if (event.key === 'Enter') {
+                searchTodos();
+            }
+        });
+        
+        // 할 일 검색 함수
+        function searchTodos() {
+            const searchTerm = searchInput.value.trim().toLowerCase();
+            if (!searchTerm) {
+                renderTodos(allTodos);
+                return;
+            }
+            
+            const filteredTodos = allTodos.filter(todo => 
+                todo.title.toLowerCase().includes(searchTerm) || 
+                todo.description.toLowerCase().includes(searchTerm)
+            );
+            
+            renderTodos(filteredTodos);
+        }
+        
+        // 카테고리 옵션 업데이트
+        function updateCategoryOptions(todos) {
+            const categories = new Set(['all']);
+            todos.forEach(todo => {
+                categories.add(todo.category || 'general');
+            });
+            
+            categoryFilter.innerHTML = '';
+            categories.forEach(category => {
+                const option = document.createElement('option');
+                option.value = category === 'all' ? 'all' : category;
+                option.textContent = category === 'all' ? '모든 카테고리' : category;
+                categoryFilter.appendChild(option);
+            });
+        }
         
         // 할 일 목록 불러오기
         async function loadTodos() {
             try {
                 const response = await fetch('/todos');
                 const todos = await response.json();
+                allTodos = todos; // 모든 할 일 저장
                 renderTodos(todos);
+                updateCategoryOptions(todos);
+                
+                // 달력 업데이트
+                renderCalendar(currentMonth, currentYear);
             } catch (error) {
                 console.error('할 일 목록을 불러오는 중 오류 발생:', error);
             }
@@ -401,6 +548,18 @@
             const firstDayOfMonth = new Date(year, month, 1).getDay();
             const daysInMonth = new Date(year, month + 1, 0).getDate();
 
+            // 날짜별 할 일 개수 계산
+            const todosPerDate = {};
+            allTodos.forEach(todo => {
+                if (todo.due_date) {
+                    const dueDate = new Date(todo.due_date);
+                    if (dueDate.getMonth() === month && dueDate.getFullYear() === year) {
+                        const day = dueDate.getDate();
+                        todosPerDate[day] = (todosPerDate[day] || 0) + 1;
+                    }
+                }
+            });
+
             let date = 1;
             for (let i = 0; i < 6; i++) {
                 const row = document.createElement('tr');
@@ -420,11 +579,20 @@
                         // 달의 마지막 날짜 이후의 빈 칸
                         cell.textContent = '';
                     } else {
-                        cell.textContent = date;
+                        // 날짜 표시
+                        cell.innerHTML = `<span>${date}</span>`;
+                        
+                        // 할 일 개수 표시
+                        if (todosPerDate[date]) {
+                            const badge = document.createElement('div');
+                            badge.className = 'todo-badge';
+                            badge.textContent = todosPerDate[date];
+                            cell.appendChild(badge);
+                        }
                         
                         // 날짜 클릭 이벤트 추가
                         cell.addEventListener('click', function() {
-                            const clickedDate = new Date(year, month, parseInt(this.textContent));
+                            const clickedDate = new Date(year, month, parseInt(this.querySelector('span').textContent));
                             selectDate(clickedDate);
                         });
                         
@@ -459,8 +627,45 @@
             selectedDate = date;
             renderCalendar(currentMonth, currentYear);
             
-            // 선택한 날짜에 대한 작업 (예: 해당 날짜의 할 일 필터링)
-            console.log(`선택된 날짜: ${date.toLocaleDateString('ko-KR')}`);
+            // 선택한 날짜의 할 일 필터링 (수정된 부분)
+            const selectedYear = date.getFullYear();
+            const selectedMonth = date.getMonth();
+            const selectedDay = date.getDate();
+            
+            const filteredTodos = allTodos.filter(todo => {
+                if (!todo.due_date) return false;
+                
+                const dueDate = new Date(todo.due_date);
+                return dueDate.getFullYear() === selectedYear && 
+                       dueDate.getMonth() === selectedMonth && 
+                       dueDate.getDate() === selectedDay;
+            });
+            
+            renderTodos(filteredTodos);
+            
+            // 날짜 선택 표시
+            const dateDisplay = document.createElement('div');
+            dateDisplay.className = 'selected-date-display';
+            dateDisplay.innerHTML = `
+                <p>선택한 날짜: ${date.toLocaleDateString('ko-KR')}</p>
+                <button id="clear-date-filter">필터 해제</button>
+            `;
+            
+            // 기존 날짜 표시 제거
+            const existingDisplay = document.querySelector('.selected-date-display');
+            if (existingDisplay) {
+                existingDisplay.remove();
+            }
+            
+            // 새 날짜 표시 추가
+            todoList.parentNode.insertBefore(dateDisplay, todoList);
+            
+            // 필터 해제 버튼 이벤튼
+            document.getElementById('clear-date-filter').addEventListener('click', function() {
+                const display = document.querySelector('.selected-date-display');
+                if (display) display.remove();
+                renderTodos(allTodos);
+            });
         }
 
         // 이전 달 버튼 클릭 이벤트
